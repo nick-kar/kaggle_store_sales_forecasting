@@ -41,19 +41,43 @@ The project includes:
 
 ## Experimental Results
 
-| Model                                   | RMSLE  |
-|---------------------------------------- |-------:|
-| Linear Regression                       | 2.1040 |
-| XGBoost                                 | 0.6839 |
-| XGBoost + Lags                          | 0.4573 |
-| XGBoost + Expanded Features             | 0.4325 |
-| CatBoost                                | 0.4518 |
-| LightGBM                                | 0.4501 |
-| XGBoost + EWMA + Seasonality            | 0.4320 |
-| XGBoost Ensemble                        | 0.4316 |
+### Previous model experiments
 
-The largest improvement came from adding store-family-level lag and rolling-window features, showing that recent sales history was the strongest predictive signal.
-This comparison demonstrates that advanced feature engineering contributed more to performance gains than changing the underlying boosting algorithm. XGBoost consistently outperformed both CatBoost and LightGBM on this dataset.
+The following results are from earlier model experiments. They are retained to document the progression of feature engineering and model development.
+
+| Model | RMSLE |
+|---|---:|
+| Linear Regression | 2.1040 |
+| XGBoost | 0.6839 |
+| XGBoost + Lags | 0.4573 |
+| XGBoost + Expanded Features | 0.4325 |
+| CatBoost | 0.4518 |
+| LightGBM | 0.4501 |
+| XGBoost + EWMA + Seasonality | 0.4320 |
+| XGBoost Ensemble | 0.4316 |
+
+### Hyperparameter tuning and final test evaluation
+
+The hyperparameter-tuning experiment used a chronological split, with July–December 2016 used for validation and January–August 15, 2017 reserved for final testing.
+
+| Model | Evaluation set | RMSLE |
+|---|---|---:|
+| Seven-day lag baseline | Final test (2017) | 0.727332 |
+| Tuned XGBoost | Final test (2017) | 0.462110 |
+
+The tuned XGBoost model achieved a **36.46% reduction in RMSLE** compared with the seven-day lag baseline.
+
+Hyperparameters selected using validation RMSLE:
+
+- `n_estimators`: 700
+- `max_depth`: 8
+- `learning_rate`: 0.03
+- `subsample`: 0.7
+- `colsample_bytree`: 0.8
+
+The final model was trained on a reproducible random sample of 500,000 rows from the pre-2017 development data. The 2017 test period was held out from hyperparameter selection.
+
+The previous model results and the new tuned-model result come from different experiments and evaluation stages; they should not be treated as a direct, like-for-like comparison without verifying that their data splits and evaluation procedures match.
 
 ## Key Findings
 
@@ -63,8 +87,7 @@ This comparison demonstrates that advanced feature engineering contributed more 
 * Weekend sales are higher than weekday sales.
 * Product family and store identity are important.
 * Recent sales history dominates model performance.
-* Rolling mean features, especially `rolling_mean_7` and `rolling_mean_3`, were the most important predictors.
-* SHAP analysis confirmed that short-term store-family sales history drives most predictions.
+* Rolling mean features, particularly rolling_mean_7, were among the engineered predictors used to capture recent sales trends.
 
 ## Repository Structure
 
@@ -101,4 +124,4 @@ notebooks/
 
 ## Conclusion
 
-This project demonstrates an end-to-end time-series machine learning workflow. The final weighted XGBoost ensemble achieved a validation RMSLE of **0.4316**, with most performance gains coming from advanced time-series feature engineering rather than model tuning alone.
+This project demonstrates an end-to-end retail sales forecasting workflow, from exploratory data analysis and time-series feature engineering to model comparison, explainability, and hyperparameter tuning. Earlier experiments achieved a validation RMSLE of **0.4316** with a weighted XGBoost ensemble. In a separate hyperparameter-tuning experiment, the tuned XGBoost model achieved a final test RMSLE of **0.462110**, improving on the seven-day lag baseline by **36.46%**. These results highlight the value of historical sales features and the importance of evaluating forecasting models using chronological splits.
